@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>GX Tracking Dashboard</title>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js"></script>
+<style>
+    body { font-family: sans-serif; padding: 20px; background-color: #f4f4f4; }
+    h1 { color: #1e88e5; }
+    .data-container { background-color: white; border: 1px solid #ddd; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    strong { color: #d84315; }
+</style>
+</head>
+<body>
+
+    <h1>Live Location Tracking Dashboard</h1>
+    
+    <div class="data-container">
+        <h2>Tracking User: <span id="targetUser">user123</span></h2>
+        <hr>
+        <p>Latitude (Lat): <strong id="latDisplay">Awaiting Data...</strong></p>
+        <p>Longitude (Lng): <strong id="lngDisplay">Awaiting Data...</strong></p>
+        <p>Last Updated Time (Readable): <strong id="humanTime">Awaiting Data...</strong></p>
+    </div>
+
+    <script>
+        // --- YOUR FIREBASE CONFIGURATION (Must match capture.html) ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyCc5yrARvCo5w6ZVKuEaE4YuILcC4rJ0Sk",
+            authDomain: "gx-tracking.firebaseapp.com",
+            databaseURL: "https://gx-tracking-default-rtdb.firebaseio.com",
+            projectId: "gx-tracking",
+            // ... add other config if necessary ...
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // --- SET THE TARGET USER ID TO VIEW ---
+        const targetUid = 'user123'; 
+        document.getElementById('targetUser').textContent = targetUid;
+        
+        // Reference the data node in Firebase
+        const userRef = db.ref('users/' + targetUid);
+
+        // --- GET HTML ELEMENTS FOR DISPLAY ---
+        const latElement = document.getElementById('latDisplay');
+        const lngElement = document.getElementById('lngDisplay');
+        const humanTimeElement = document.getElementById('humanTime');
+
+        // --- REAL-TIME DATA LISTENER ---
+        userRef.on('value', (snapshot) => {
+            const data = snapshot.val(); 
+
+            if (data && data.lat && data.lng) {
+                
+                // Update the Latitude and Longitude displays
+                latElement.textContent = data.lat;
+                lngElement.textContent = data.lng;
+                
+                // Convert the Unix timestamp (milliseconds) to a readable date
+                const date = new Date(data.time);
+                humanTimeElement.textContent = date.toLocaleString('en-US', { 
+                    dateStyle: 'full', 
+                    timeStyle: 'medium' 
+                });
+
+            } else {
+                // Handle cases where data is missing
+                latElement.textContent = 'No data found for this user.';
+                lngElement.textContent = 'No data found.';
+                humanTimeElement.textContent = 'N/A';
+            }
+        });
+        
+    </script>
+</body>
+</html>
