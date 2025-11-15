@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GX Live Tracker</title>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js">// REALTIME LOCATION TRACKING + MAP INIT
+let liveMarker;
+let map;
+function initMap() {
+  map = new google.maps.Map(document.getElementById('map'), {
+    center: { lat: -6.8, lng: 39.2 },
+    zoom: 14,
+    mapId: 'DEMO_MAP_ID'
+  });
+}
+window.initMap = initMap;
+
+function updateLiveLocation(lat, lng) {
+  if (!liveMarker) {
+    liveMarker = new google.maps.Marker({ position: { lat, lng }, map, title: "Live User" });
+  } else {
+    liveMarker.setPosition({ lat, lng });
+  }
+  map.setCenter({ lat, lng });
+}
+
+function sendLink(){
+  const phone = document.getElementById('phoneInput').value;
+  if(phone.trim()===""){
+    alert("Enter phone number first!");
+    return;
+  }
+  const link = "https://yourdomain.com/capture.html?user=" + phone;
+  alert("Link sent to " + phone + " → " + link);
+}
+
+// Firebase realtime listener
+let liveMarker;
+function updateLiveLocation(lat, lng) {
+  if (!liveMarker) {
+    liveMarker = new google.maps.Marker({ position: { lat, lng }, map, title: "Live User" });
+  } else {
+    liveMarker.setPosition({ lat, lng });
+  }
+}
+// Firebase realtime listener
+onValue(ref(db, 'liveLocation/'), snapshot => {
+  const data = snapshot.val();
+  if (data) updateLiveLocation(data.lat, data.lng);
+});
+</script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
+
+    <!-- Google Maps API -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDO2oNMk5OQHlw3tK6A9_GLee-0iP56fyA"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f4f4f4;
+        }
+        header {
+            background: black;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 22px;
+            font-weight: bold;
+        }
+        .container {
+            padding: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #map {
+            width: 100%;
+            height: 450px;
+            margin-top: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+
+  <!-- SEND LINK SECTION -->
+  <div style="position:fixed; top:20px; left:20px; z-index:999; background:rgba(0,0,0,0.7); padding:15px; border-radius:8px; box-shadow:0 0 10px #00ffee;">
+    <h3 style="margin:0 0 10px 0; color:#00ffee;">Send Tracking Link</h3>
+    <input id="phoneInput" type="text" placeholder="Enter phone number" style="padding:8px; width:180px; border:none; border-radius:6px; margin-bottom:8px;">
+    <button onclick="sendLink()" style="padding:8px 15px; background:#00ffee; border:none; border-radius:6px; cursor:pointer;">Send</button>
+  </div>
+
+  <!-- MAP VIEW BOX -->
+  <div id="map" style="position:fixed; right:20px; top:20px; width:380px; height:280px; z-index:998; border:2px solid #00ffee; border-radius:10px; box-shadow:0 0 15px #00ffee;"></div>
+
+<header>GX LIVE LOCATION TRACKER</header>
+
+<div class="container" id="adminPage">
+    <h2>Admin Panel</h2>
+    <p>Click below to generate a tracking link and send it to the user.</p>
+
+    <button onclick="createTrackingLink()">Generate Tracking Link</button>
+
+    <p id="generatedLink" style="margin-top:20px; font-weight:bold;"></p>
+</div>
+
+<div class="container" id="userPage" style="display:none;">
+    <h2>Your Location is Being Tracked</h2>
+    <p>Your live location will automatically update.</p>
+    <div id="map"></div>
+</div>
+
+<script>
+// FIREBASE CONFIG
+const firebaseConfig = {
+    apiKey: "AIzaSyCc5yrARvCo5w6ZVKuEaE4YuILcC4rJ0Sk",
+    authDomain: "gx-tracking.firebaseapp.com",
+    databaseURL: "https://gx-tracking-default-rtdb.firebaseio.com",
+    projectId: "gx-tracking",
+    storageBucket: "gx-tracking.firebasestorage.app",
+    messagingSenderId: "194870704198",
+    appId: "1:194870704198:web:131779ab69c562a5213247",
+    measurementId: "G-0PLG7WG6NX"
+};
+
+const app = firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// Detect if link has ?track=1
+const urlParams = new URLSearchParams(window.location.search);
+const userMode = urlParams.get("track");
+
+if (userMode == "1") {
+    document.getElementById("adminPage").style.display = "none";
+    document.getElementById("userPage").style.display = "block";
+    startUserTracking();
+} else {
+    document.getElementById("adminPage").style.display = "block";
+}
+
+// ADMIN: CREATE LINK
+function createTrackingLink() {
+    const link = window.location.href.split('?')[0] + "?track=1";
+    document.getElementById("generatedLink").innerHTML = `Send this link: <br><a href="${link}" target="_blank">${link}</a>`;
+}
+
+// USER: SEND LIVE LOCATION
+function startUserTracking() {
+    if (navigator.geolocation) {
+        navigator.geolocation.watchPosition((pos) => {
+            const lat = pos.coords.latitude;
+            const lng = pos.coords.longitude;
+
+            db.ref("liveLocation").set({ lat, lng });
+
+            showMap(lat, lng);
+
+        }, (err) => {
+            alert("Location access denied.");
+        });
+    }
+}
+
+let map;
+let marker;
+
+function showMap(lat, lng) {
+    const position = { lat, lng };
+
+    if (!map) {
+        map = new google.maps.Map(document.getElementById("map"), {
+            center: position,
+            zoom: 16,
+            mapId: "c772e6b1b4d57b7a" // 3D MAP VIEW
+        });
+
+        marker = new google.maps.Marker({
+            position,
+            map,
+            title: "Live Location"
+        });
+    } else {
+        map.setCenter(position);
+        marker.setPosition(position);
+    }
+}
+</script>
+
+</body>
+</html>

