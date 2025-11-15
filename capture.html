@@ -2,81 +2,86 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>GX Capture</title>
-
+<title>GX Tracker Sender</title>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js"></script>
-
-<script>
-// Firebase Configuration (Imeachwa kama ilivyo)
-const firebaseConfig = {
-  apiKey: "AIzaSyCc5yrARvCo5w6ZVKuEaE4YuILcC4rJ0Sk",
-  authDomain: "gx-tracking.firebaseapp.com",
-  databaseURL: "https://gx-tracking-default-rtdb.firebaseio.com",
-  projectId: "gx-tracking",
-  storageBucket: "gx-tracking.firebasestorage.app",
-  messagingSenderId: "194870704198",
-  appId: "1:194870704198:web:131779ab69c562a5213247",
-  measurementId: "G-0PLG7WG6NX"
-};
-
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-</script>
-
+<style>
+    body { font-family: sans-serif; text-align: center; padding-top: 50px; }
+    h1 { color: #1e88e5; }
+    .status { font-weight: bold; margin-top: 20px; }
+    .success { color: green; }
+    .error { color: red; }
+</style>
 </head>
 <body>
 
-<h2 id="statusMessage">Inapakia... Subiri ruhusa ya eneo...</h2>
+    <h1 id="statusMessage">Awaiting Location Permission...</h1>
+    <p>Tracking User: <strong id="userDisplay">N/A</strong></p>
 
-<script>
-const urlParams = new URLSearchParams(window.location.search);
-let uid = urlParams.get("uid");
-const statusElement = document.getElementById("statusMessage");
+    <script>
+        // --- YOUR FIREBASE CONFIGURATION ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyCc5yrARvCo5w6ZVKuEaE4YuILcC4rJ0Sk",
+            authDomain: "gx-tracking.firebaseapp.com",
+            databaseURL: "https://gx-tracking-default-rtdb.firebaseio.com",
+            projectId: "gx-tracking",
+            storageBucket: "gx-tracking.firebasestorage.app",
+            messagingSenderId: "194870704198",
+            appId: "1:194870704198:web:131779ab69c562a5213247",
+            measurementId: "G-0PLG7WG6NX"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
 
-function sendLocation(){
-    if(navigator.geolocation){
-        // watchPosition inapewa kazi tatu: Mafanikio, Kosa, na Mipangilio
-        navigator.geolocation.watchPosition(
-            // 1. Kazi ya Mafanikio (Success Callback)
-            pos => {
-                // Sasisha ujumbe wa hali kuwa umefaulu
-                statusElement.innerHTML = `✅ **IMEFAULU KUFUNGUA UFUATILIAJI** kwa User ID: **${uid}**`;
-                statusElement.style.color = "green";
+        const urlParams = new URLSearchParams(window.location.search);
+        let uid = urlParams.get("uid");
+        const statusElement = document.getElementById("statusMessage");
+        document.getElementById("userDisplay").textContent = uid || "UID Missing";
 
-                // Tuma data kwenye Firebase
-                db.ref("users/" + uid).set({
-                    lat: pos.coords.latitude,
-                    lng: pos.coords.longitude,
-                    time: Date.now()
-                });
-            },
-            // 2. Kazi ya Kosa (Error Callback) - Hii inarekebisha tatizo la kunyamaza
-            err => {
-                let errorMessage = "";
-                if (err.code === 1) {
-                    errorMessage = "Ruhusa ya eneo imekataliwa. Tafadhali ruhusu eneo.";
-                } else if (err.code === 3) {
-                    errorMessage = "Imeshindwa kupata eneo (Timeout).";
-                } else {
-                    errorMessage = "Kosa la Geolocation: " + err.message;
-                }
-                
-                statusElement.innerHTML = `❌ **KOSA LILITOKEA:** ${errorMessage}`;
-                statusElement.style.color = "red";
-                console.error("Geolocation Error:", err);
-            },
-            // 3. Mipangilio (Options)
-            { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 } 
-        );
-    } else {
-        statusElement.innerHTML = "❌ **Kivinjari chako hakiauni Geolocation.**";
-        statusElement.style.color = "red";
-    }
-}
+        if (!uid) {
+            statusElement.textContent = "❌ ERROR: UID parameter is missing from the URL.";
+            statusElement.className = "status error";
+        } else {
+            sendLocation();
+        }
 
-sendLocation();
-</script>
+        function sendLocation(){
+            if (!navigator.geolocation) {
+                statusElement.textContent = "❌ ERROR: Geolocation not supported by this browser.";
+                statusElement.className = "status error";
+                return;
+            }
 
+            // Start watching location with error handling
+            navigator.geolocation.watchPosition(
+                // SUCCESS Callback
+                pos => {
+                    statusElement.textContent = "✅ TRACKING ACTIVE: Location data is being sent.";
+                    statusElement.className = "status success";
+                    
+                    // Write data to Firebase at users/{uid}
+                    db.ref("users/" + uid).set({
+                        lat: pos.coords.latitude,
+                        lng: pos.coords.longitude,
+                        time: Date.now()
+                    });
+                },
+                // ERROR Callback
+                err => {
+                    let message = "Tracking failed. Unknown error.";
+                    if (err.code === 1) {
+                        message = "❌ ACCESS DENIED: Please allow location access in your browser.";
+                    } else if (err.code === 3) {
+                        message = "❌ TIMEOUT: Failed to get location in time.";
+                    }
+                    statusElement.textContent = message;
+                    statusElement.className = "status error";
+                    console.error("Geolocation Error:", err);
+                },
+                // Options: Request high accuracy, set a timeout
+                { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 } 
+            );
+        }
+    </script>
 </body>
 </html>
