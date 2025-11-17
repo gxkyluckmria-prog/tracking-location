@@ -1,37 +1,326 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>GX LOCATION TRACK</title>
-<style>
-body {
-  margin: 0;
-  background: black;
-  color: #0f0;
-  font-family: Orbitron, sans-serif;
-  text-align: center;
-}
-h1 { margin-top: 80px; font-size: 40px; text-shadow: 0 0 20px #0f0; }
-button {
-  padding: 15px 30px;
-  margin-top: 40px;
-  background: #0f0;
-  border: none;
-  font-size: 20px;
-  cursor: pointer;
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ACCESS PROTOCOL: GX Tracker System</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- General Body & Core Setup (Kijani/Nyekundu) --- */
+        body, html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            height: 100%;
+            font-family: 'Roboto Mono', monospace;
+            background-color: #0d0000;
+            color: #ff4d4d; /* Nyekundu Nyepesi */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* --- Global Noise/Static Effect --- */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAMAAAAp4XiDAAAAUVRYw+3PsQ0AMAgEQe3//2hG9gO9Nf4eCAqSgQhCEIQgCIIgCIJgQkIS0hP39v1+d0R3pB3392n9D3T+76GgBwQhCEIQhCAIgiAIgiACEoB//gQ9z5uV4wAAAABJRU5ErkJggg==");
+            background-color: rgba(255, 0, 0, 0.1); 
+            opacity: 0.1; 
+            pointer-events: none;
+            z-index: 1000;
+            animation: moveNoise 5s infinite alternate linear;
+        }
+        @keyframes moveNoise {
+            from { background-position: 0 0; }
+            to { background-position: 100px 100px; }
+        }
+        
+        /* --- Container Styling & Deep Pulse Effect --- */
+        .container {
+            padding: 40px;
+            background-color: rgba(0, 0, 0, 0.95);
+            width: 450px;
+            max-width: 90%;
+            border-radius: 8px;
+            border: 2px solid #33ff33; /* Kijani */
+            box-shadow: 0 0 50px #ff0000; /* Nyekundu Hatari */
+            animation: deepPulse 3s infinite alternate;
+            z-index: 10;
+            transition: opacity 0.5s ease-in-out; /* Kwa ajili ya transition laini */
+        }
+        @keyframes deepPulse {
+            0% { box-shadow: 0 0 50px #ff0000, inset 0 0 10px #33ff33; }
+            100% { box-shadow: 0 0 65px #ff4d4d, inset 0 0 15px #33ff33; }
+        }
+        
+        /* --- Login Page Specifics --- */
+        #login-page h2 {
+            color: #33ff33; 
+            margin-bottom: 20px;
+            text-shadow: 0 0 5px #33ff33;
+        }
+        .login-input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            background: #1a1a1a;
+            border: 1px solid #ff4d4d;
+            color: #33ff33; 
+            font-size: 1em;
+            box-sizing: border-box;
+        }
+        .login-input:focus {
+            outline: none;
+            border-color: #33ff33;
+            box-shadow: 0 0 10px #33ff33;
+        }
+        
+        /* --- Button 'LET START' --- */
+        #start-button {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.5em;
+            cursor: pointer;
+            background-color: #33ff33; /* Kijani */
+            color: #000;
+            border: 3px solid #ff4d4d;
+            box-shadow: 0 0 15px #33ff33;
+            transition: all 0.2s;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        #start-button:hover:not(:disabled) {
+            background-color: #ff4d4d; /* Nyekundu on hover */
+            color: white;
+            box-shadow: 0 0 20px #ff4d4d;
+        }
+        #start-button:disabled {
+             opacity: 0.6;
+             cursor: not-allowed;
+        }
+
+        /* --- Warning Wall Specifics --- */
+        #warning-wall {
+            display: none; 
+            text-align: center;
+        }
+        #warning-wall h1 {
+            font-size: 3.5em;
+            color: #ff4d4d; 
+            text-shadow: 0 0 10px #ff4d4d, 0 0 5px #33ff33;
+            animation: textGlitch 0.5s infinite alternate;
+        }
+        @keyframes textGlitch {
+            0% { transform: skew(0deg); opacity: 1; }
+            50% { transform: skew(0.5deg); opacity: 0.9; }
+            100% { transform: skew(-0.5deg); opacity: 1; }
+        }
+
+        .profile-pic {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%; 
+            object-fit: cover;
+            margin-bottom: 25px;
+            border: 4px solid #33ff33;
+            filter: saturate(1.8) grayscale(0.7) contrast(1.5);
+        }
+        
+        .hacker-link {
+            display: inline-block;
+            margin-top: 30px;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            background-color: #ff4d4d; 
+            color: white;
+            border: 3px solid #33ff33;
+            box-shadow: 0 0 20px #ff4d4d;
+            text-transform: uppercase;
+        }
+        
+        /* --- Audio Warning Icon --- */
+        #audio-warning {
+            color: #33ff33;
+            font-size: 3em;
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            cursor: pointer;
+            z-index: 10;
+            animation: blinking 1s infinite;
+        }
+        @keyframes blinking {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.2; }
+        }
+    </style>
 </head>
 <body>
+    <div id="audio-warning" title="Click to disable/enable critical audio alert">🔇</div> 
+    
+    <div class="container" id="main-container">
 
-<h1>GX LOCATION TRACK SYSTEM</h1>
-<button onclick="start()">LET'S HACK →</button>
+        <div id="login-page">
+            <h1 style="color: #ff4d4d; font-size: 3em;">GX TRACKER</h1>
+            <p style="color: #33ff33;">SYSTEM LOGIN REQUIRED TO ACKNOWLEDGE THREAT LEVEL</p>
+            
+            <h2>ACCESS PROTOCOL</h2>
+            <input type="text" class="login-input" placeholder="USERNAME: Agent GX-01" value="Agent GX-01" disabled>
+            
+            <input type="password" id="password-input" class="login-input" placeholder="PASSWORD: ********">
+            
+            <p id="error-message" style="color: #ff4d4d; margin-bottom: 15px; font-weight: bold; display: none;">ACCESS DENIED: INVALID CREDENTIALS. RETRY REQUIRED.</p>
 
-<script>
-function start(){
-  window.location.href = "tracking.html";
-}
-</script>
+            <button id="start-button">LET START</button>
+            
+            <p style="margin-top: 30px; font-size: 0.9em; color: #ff4d4d;">
+                <span style="color: #33ff33;">ALERT:</span> CRITICAL ANOMALY DETECTED IN SECTOR 5.
+            </p>
+        </div>
 
+        <div id="warning-wall">
+            <img src="https://i.imgur.com/W29v62e.png" alt="Corrupted Profile" class="profile-pic">
+            
+            <h1>SYSTEM OVERLOAD</h1>
+            
+            <p style="color: #ffccff;">
+                *** THREAT LEVEL RED: KERNEL DATA CORRUPTION ***
+                <br><br>
+                UNAUTHORIZED ACCESS CONFIRMED. CONTAMINATION IS SPREADING.
+                <br>
+                <span style="color: #33ff33; font-size: 0.9em;">(STATUS: FAILING)</span>
+            </p>
+            
+            <a href="https://www.example.com/emergency_shutdown" class="hacker-link" target="_blank">
+                INITIATE EMERGENCY SHUTDOWN
+            </a>
+            
+            <p style="margin-top: 40px; font-size: 1em; color: #ff4d4d;">
+                LOGGING ALL ACTIVITY. DO NOT ATTEMPT RECOVERY WITHOUT PROTOCOL F.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // --- JavaScript: Kusimamia Ukurasa na Uthibitishaji ---
+        
+        const loginPage = document.getElementById('login-page');
+        const warningWall = document.getElementById('warning-wall');
+        const startButton = document.getElementById('start-button');
+        const audioWarningIcon = document.getElementById('audio-warning');
+        const passwordInput = document.getElementById('password-input'); 
+        const errorMessage = document.getElementById('error-message'); 
+        const mainContainer = document.getElementById('main-container');
+
+        // Sauti nyingi za hatari
+        const audioFiles = [
+            // Kumbuka: Tumia faili halisi za MP3 kwenye mfumo wa uzalishaji (production system)
+            'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', 
+            'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3', 
+            'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3'
+        ];
+        let audioElements = [];
+        let isMuted = true;
+        const CORRECT_PASSWORD = 'mamele123';
+        
+        // 1. Andaa Sauti
+        function setupAudio() {
+            audioFiles.forEach(src => {
+                const audio = new Audio(src);
+                audio.loop = true;
+                audio.volume = 0.3;
+                audioElements.push(audio);
+            });
+        }
+        
+        // 2. Cheza Sauti Zote
+        function startAllAudio() {
+            if (!isMuted) return;
+
+            audioElements.forEach(audio => {
+                audio.play().catch(e => {
+                    // console.log("Audio start blocked:", e);
+                });
+            });
+            isMuted = false;
+            audioWarningIcon.textContent = '🔊';
+            audioWarningIcon.style.color = '#ff4d4d'; // Nyekundu
+        }
+
+        // 3. Zima/Washa Sauti
+        function toggleMute() {
+            if (isMuted) {
+                // Ikiuzimwa, tunacheza
+                startAllAudio();
+            } else {
+                // Ikiwashwa, tunazima
+                audioElements.forEach(audio => audio.pause());
+                isMuted = true;
+                audioWarningIcon.textContent = '🔇';
+                audioWarningIcon.style.color = '#33ff33'; // Kijani
+            }
+        }
+
+        // 4. Badilisha Ukurasa kwa kuthibitisha Nenosiri
+        function transitionToWarning() {
+            const enteredPassword = passwordInput.value;
+
+            // Ficha ujumbe wa makosa kabla ya kujaribu tena
+            errorMessage.style.display = 'none'; 
+
+            if (enteredPassword === CORRECT_PASSWORD) {
+                // Ikiwa sahihi
+                // Fanya Login Page ififie
+                loginPage.style.opacity = 0; 
+                mainContainer.style.transition = 'all 0.5s ease-in-out';
+
+                setTimeout(() => {
+                    loginPage.style.display = 'none';
+                    warningWall.style.display = 'block';
+                    // Tuhakikishe mwangaza wa warning wall unaonekana vizuri
+                    mainContainer.style.opacity = 1;
+                    startAllAudio(); // ANZA SAUTI
+                }, 500); 
+                
+            } else {
+                // Ikiwa si sahihi
+                errorMessage.style.display = 'block'; // Onyesha ujumbe wa makosa
+                
+                // Ongeza athari ya kutetemeka (glitch) kwenye container
+                mainContainer.style.animation = 'deepPulse 0.1s 3 alternate'; 
+
+                // Zima button kwa muda mfupi
+                startButton.disabled = true;
+                startButton.textContent = 'ACCESS DENIED';
+                
+                setTimeout(() => {
+                    mainContainer.style.animation = 'deepPulse 3s infinite alternate'; // Rudisha pulse ya kawaida
+                    startButton.disabled = false;
+                    startButton.textContent = 'LET START';
+                    passwordInput.value = ''; // Futa nenosiri
+                }, 2000);
+            }
+        }
+
+        // --- Event Listeners ---
+        startButton.addEventListener('click', transitionToWarning);
+        audioWarningIcon.addEventListener('click', toggleMute);
+        
+        // Pia ruhusu Enter key kufanya kazi
+        passwordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                transitionToWarning();
+            }
+        });
+
+        // Anzisha Sauti wakati wa kupakia ukurasa (zitacheza tu baada ya kubofya)
+        document.addEventListener('DOMContentLoaded', setupAudio);
+    </script>
 </body>
 </html>
