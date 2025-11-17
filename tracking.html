@@ -1,113 +1,112 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-  <meta property="og:title" content="GX Tracking Web" />
-<meta property="og:description" content="Fuatilia maeneo ya watumiaji moja kwa moja (Real-Time Location Tracking System)." />
-<meta property="og:type" content="website" />
-<meta property="og:url" content="https://tracking-location-eight.vercel.app/" />
-<meta property="og:image" content="https://tracking-location-eight.vercel.app/f.png" />
-<meta property="og:image:width" content="1200" /> 
-<meta property="og:image:height" content="630" /> 
-<meta property="og:image:alt" content="GX Logo - Live Location Tracking Web" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crime Live Map</title>
 
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="GX Tracking Web">
-<meta name="twitter:description" content="Fuatilia maeneo ya watumiaji moja kwa moja (Real-Time Location Tracking System).">
-<meta name="twitter:image" content="https://tracking-location-eight.vercel.app/f.png">
-
-<title>GX LIVE TRACKING</title>
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<!-- Leaflet Search CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
 
 <style>
-#map {
-  width: 100%;
-  height: 70vh;
-}
-input, button {
-  padding: 10px;
-  font-size: 18px;
-}
+    html, body { height: 100%; margin: 0; font-family: Arial, sans-serif; }
+    #map { width: 100%; height: 100%; }
+    .controls {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: rgba(0,0,0,0.7);
+        padding: 10px 15px;
+        border-radius: 8px;
+        color: white;
+        z-index: 1000;
+    }
+    .controls label { display: block; margin: 5px 0; }
 </style>
-
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js"></script>
-
-<script>
-// ---------------- F I R E B A S E ----------------
-const firebaseConfig = {
-  apiKey: "AIzaSyCc5yrARvCo5w6ZVKuEaE4YuILcC4rJ0Sk",
-  authDomain: "gx-tracking.firebaseapp.com",
-  databaseURL: "https://gx-tracking-default-rtdb.firebaseio.com",
-  projectId: "gx-tracking",
-  storageBucket: "gx-tracking.firebasestorage.app",
-  messagingSenderId: "194870704198",
-  appId: "1:194870704198:web:131779ab69c562a5213247",
-  measurementId: "G-0PLG7WG6NX"
-};
-
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-</script>
-
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDO2oNMk5OQHlw3tK6A9_GLee-0iP56fyA"></script>
-
 </head>
 <body>
 
-<h2>GX LIVE MOVEMENT TRACKING</h2>
+<div class="controls">
+    <strong>Crime Filters:</strong>
+    <label><input type="checkbox" class="crime-type" value="Robbery" checked> Robbery</label>
+    <label><input type="checkbox" class="crime-type" value="Assault" checked> Assault</label>
+    <label><input type="checkbox" class="crime-type" value="Theft" checked> Theft</label>
+</div>
 
 <div id="map"></div>
 
-<br>
-<input id="phone" placeholder="Enter phone number">
-<button onclick="sendLink()">Send Tracking Link</button>
-
-<p id="generatedLink" style="color:#0f0;"></p>
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<!-- Leaflet Heatmap Plugin -->
+<script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
+<!-- Leaflet Search/Geocoder -->
+<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
 <script>
-// =========== GENERATE TRACK LINK ===========
-function sendLink(){
-  let phone = document.getElementById("phone").value;
-  let uid = "user123"; 
-  let link = window.location.origin + "/capture.html?uid=" + uid;
+// Initialize map
+const map = L.map('map').setView([-6.7924, 39.2083], 13);
 
-  document.getElementById("generatedLink").innerHTML =
-      "Send this link: " + link;
+// Add tile layer
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors'
+}).addTo(map);
+
+// Add search control
+L.Control.geocoder({position: 'topright'}).addTo(map);
+
+// Example crime data
+let crimes = [
+    {lat: -6.7924, lng: 39.2083, type: "Robbery"},
+    {lat: -6.7900, lng: 39.2150, type: "Assault"},
+    {lat: -6.7950, lng: 39.2100, type: "Theft"}
+];
+
+// Create marker layer and heatmap layer
+let markers = L.layerGroup().addTo(map);
+let heat = L.heatLayer([], {radius: 25, blur: 15}).addTo(map);
+
+// Function to update map
+function updateMap() {
+    const selectedTypes = Array.from(document.querySelectorAll('.crime-type:checked')).map(c => c.value);
+
+    // Clear layers
+    markers.clearLayers();
+    heat.setLatLngs([]);
+
+    const heatPoints = [];
+    crimes.forEach(crime => {
+        if (selectedTypes.includes(crime.type)) {
+            // Marker
+            const marker = L.marker([crime.lat, crime.lng])
+                .bindPopup(`<b>Type:</b> ${crime.type}<br><b>Time:</b> ${new Date().toLocaleString()}`);
+            markers.addLayer(marker);
+
+            // Heat point
+            heatPoints.push([crime.lat, crime.lng, 1]);
+        }
+    });
+    heat.setLatLngs(heatPoints);
 }
 
-// =========== GOOGLE MAP ==============
-let map, marker;
+// Initial update
+updateMap();
 
-function initMap(){
-  map = new google.maps.Map(document.getElementById("map"), {
-    center: {lat: -6.8, lng: 39.2},
-    zoom: 17,
-    tilt: 60,
-    heading: 90,
-    mapId: "a3efe1c35b0e4a48"
-  });
+// Add event listener to checkboxes
+document.querySelectorAll('.crime-type').forEach(cb => cb.addEventListener('change', updateMap));
 
-  marker = new google.maps.Marker({
-    map,
-    animation: google.maps.Animation.BOUNCE
-  });
+// Simulate live updates
+setInterval(() => {
+    // Randomly add or move crimes
+    crimes = crimes.map(c => ({
+        lat: c.lat + (Math.random()-0.5)/500,
+        lng: c.lng + (Math.random()-0.5)/500,
+        type: c.type
+    }));
+    updateMap();
+}, 10000);
 
-  // listen firebase
-  db.ref("users/user123").on("value", snap => {
-    if(!snap.val()) return;
-    let lat = snap.val().lat;
-    let lng = snap.val().lng;
-
-    let pos = {lat, lng};
-    marker.setPosition(pos);
-    map.setCenter(pos);
-  });
-}
-
-initMap();
 </script>
-
 </body>
 </html>
-
-
